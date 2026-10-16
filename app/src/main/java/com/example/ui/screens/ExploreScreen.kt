@@ -243,15 +243,63 @@ fun ExploreScreen(
     }
 
     // Repository Cards
-    items(repositories, key = { "explore-${it.id}" }) { repo ->
-      Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {
-        RepositoryCard(
-          repo = repo,
-          isBookmarked = viewModel.isRepoBookmarked(repo.fullName),
-          onBookmarkClick = { viewModel.toggleBookmark(repo) },
-          onCardClick = { viewModel.openRepoDetails(repo) },
-          onExploreSkillsClick = { viewModel.openRepoDetails(repo) }
-        )
+    if (repositories.isEmpty() && !isLoading) {
+      item {
+        Card(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp),
+          colors = CardDefaults.cardColors(containerColor = CreamSurface),
+          border = androidx.compose.foundation.BorderStroke(1.dp, CreamBorder),
+          shape = RoundedCornerShape(16.dp)
+        ) {
+          Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            Icon(
+              imageVector = Icons.Outlined.CloudDownload,
+              contentDescription = null,
+              modifier = Modifier.size(40.dp),
+              tint = InkBlack
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+              text = "No repositories found",
+              style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+              color = InkBlack
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+              text = "Fetch real-time repositories and open source projects from GitHub and GitLab.",
+              style = MaterialTheme.typography.bodySmall,
+              color = InkMuted,
+              textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+              onClick = { viewModel.refreshData() },
+              colors = ButtonDefaults.buttonColors(containerColor = InkBlack, contentColor = CreamBackground),
+              shape = RoundedCornerShape(10.dp)
+            ) {
+              Icon(Icons.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+              Spacer(modifier = Modifier.width(6.dp))
+              Text("Fetch Live Data", fontWeight = FontWeight.Bold)
+            }
+          }
+        }
+      }
+    } else {
+      items(repositories, key = { "explore-${it.id}" }) { repo ->
+        Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {
+          RepositoryCard(
+            repo = repo,
+            isBookmarked = viewModel.isRepoBookmarked(repo.fullName),
+            onBookmarkClick = { viewModel.toggleBookmark(repo) },
+            onCardClick = { viewModel.openRepoDetails(repo) },
+            onExploreSkillsClick = { viewModel.openRepoDetails(repo) }
+          )
+        }
       }
     }
   }

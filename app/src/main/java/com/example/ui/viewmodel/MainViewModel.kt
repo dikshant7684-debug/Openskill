@@ -90,6 +90,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
   }
 
   private fun loadInitialData() {
+    refreshData()
+  }
+
+  fun refreshData() {
     viewModelScope.launch {
       _isLoading.value = true
       _featuredCollections.value = repository.getFeaturedCollections()

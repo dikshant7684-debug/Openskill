@@ -24,8 +24,7 @@ enum class NavigationDestination(
   HOME("home", "Home", Icons.Filled.Home, Icons.Outlined.Home),
   EXPLORE("explore", "Explore", Icons.Filled.Explore, Icons.Outlined.Explore),
   SKILLS("skills", "Skills", Icons.Filled.Terminal, Icons.Outlined.Terminal),
-  SAVED("saved", "Saved", Icons.Filled.Bookmark, Icons.Outlined.BookmarkBorder),
-  PROFILE("profile", "Settings", Icons.Filled.Settings, Icons.Outlined.Settings)
+  SAVED("saved", "Saved", Icons.Filled.Bookmark, Icons.Outlined.BookmarkBorder)
 }
 
 @Composable

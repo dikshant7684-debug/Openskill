@@ -87,7 +87,7 @@ fun HomeScreen(
               contentAlignment = Alignment.Center
             ) {
               Image(
-                painter = painterResource(id = R.drawable.skillscout_logo),
+                painter = painterResource(id = R.drawable.openskill_logo),
                 contentDescription = "Openskill Logo",
                 modifier = Modifier.size(32.dp).clip(RoundedCornerShape(8.dp))
               )
@@ -116,17 +116,31 @@ fun HomeScreen(
             }
           }
 
-          // AI Goal Button (Solid black button with cream text)
-          Button(
-            onClick = { viewModel.setShowAiDialog(true) },
-            colors = ButtonDefaults.buttonColors(
-              containerColor = InkBlack,
-              contentColor = CreamBackground
-            ),
-            shape = RoundedCornerShape(12.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-            modifier = Modifier.testTag("btn_open_ai_scout")
-          ) {
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+              onClick = { viewModel.refreshData() },
+              modifier = Modifier.testTag("btn_home_refresh")
+            ) {
+              Icon(
+                imageVector = Icons.Outlined.Refresh,
+                contentDescription = "Refresh Real-Time Data",
+                tint = InkBlack
+              )
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            // AI Goal Button (Solid black button with cream text)
+            Button(
+              onClick = { viewModel.setShowAiDialog(true) },
+              colors = ButtonDefaults.buttonColors(
+                containerColor = InkBlack,
+                contentColor = CreamBackground
+              ),
+              shape = RoundedCornerShape(12.dp),
+              contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+              modifier = Modifier.testTag("btn_open_ai_scout")
+            ) {
             Icon(
               imageVector = Icons.Outlined.AutoAwesome,
               contentDescription = null,
@@ -140,6 +154,7 @@ fun HomeScreen(
             )
           }
         }
+      }
 
         Spacer(modifier = Modifier.height(18.dp))
 

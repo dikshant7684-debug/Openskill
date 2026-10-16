@@ -44,7 +44,7 @@ fun RepoDetailScreen(
   val context = LocalContext.current
   val isBookmarked = viewModel.isRepoBookmarked(repo.fullName)
   var selectedTab by remember { mutableIntStateOf(0) }
-  val tabs = listOf("README", "Skills (${repo.skillCount})", "Files", "Info")
+  val tabs = listOf("Add to Agent", "README", "Skills (${repo.skillCount})", "Files", "Info")
 
   Scaffold(
     modifier = modifier.fillMaxSize(),
@@ -273,7 +273,33 @@ fun RepoDetailScreen(
 
       // Tab Content
       when (selectedTab) {
-        0 -> { // README
+        0 -> { // Add to Agent
+          item {
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+              val isMcp = repo.name.contains("mcp", ignoreCase = true) ||
+                repo.description.contains("mcp", ignoreCase = true) ||
+                repo.topics.any { it.contains("mcp", ignoreCase = true) }
+              val installCmd = if (isMcp) {
+                "npx -y @modelcontextprotocol/server-${repo.name.lowercase()}"
+              } else if (repo.language?.equals("python", ignoreCase = true) == true) {
+                "pip install git+${repo.url}"
+              } else {
+                "git clone ${repo.url}"
+              }
+              AgentIntegrationView(
+                title = repo.name,
+                repoFullName = repo.fullName,
+                repoUrl = repo.url,
+                description = repo.description,
+                isMcp = isMcp,
+                installCommand = installCmd,
+                promptInstructions = repo.readmePreview.ifBlank { "You have access to tools and skills from ${repo.fullName}. Reference: ${repo.url}" },
+                tools = repo.topics
+              )
+            }
+          }
+        }
+        1 -> { // README
           item {
             Card(
               modifier = Modifier
@@ -289,7 +315,7 @@ fun RepoDetailScreen(
             }
           }
         }
-        1 -> { // Skills
+        2 -> { // Skills
           if (repo.detectedSkills.isEmpty()) {
             item {
               Box(
@@ -318,7 +344,7 @@ fun RepoDetailScreen(
             }
           }
         }
-        2 -> { // Files
+        3 -> { // Files
           item {
             Card(
               modifier = Modifier
@@ -338,7 +364,7 @@ fun RepoDetailScreen(
             }
           }
         }
-        3 -> { // Info
+        4 -> { // Info
           item {
             Card(
               modifier = Modifier

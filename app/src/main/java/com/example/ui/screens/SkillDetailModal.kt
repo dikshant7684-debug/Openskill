@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.SkillItem
+import com.example.ui.components.AgentIntegrationView
 import com.example.ui.components.MarkdownView
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MainViewModel
@@ -148,54 +149,32 @@ fun SkillDetailModal(
         }
       }
 
-      // Installation Command Card
-      if (!skill.installCommand.isNullOrBlank()) {
-        item {
-          Card(
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = CreamSurfaceVariant),
-            border = BorderStroke(1.dp, CreamBorder)
-          ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-              Text(
-                text = "INSTALLATION COMMAND",
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
-                color = InkMuted
-              )
-              Spacer(modifier = Modifier.height(6.dp))
-              Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-              ) {
-                Text(
-                  text = skill.installCommand,
-                  style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
-                  color = InkBlack,
-                  modifier = Modifier.weight(1f)
-                )
-                IconButton(
-                  onClick = {
-                    clipboardManager.setText(AnnotatedString(skill.installCommand))
-                    hasCopiedCommand = true
-                    coroutineScope.launch {
-                      delay(2000)
-                      hasCopiedCommand = false
-                    }
-                  },
-                  modifier = Modifier.size(28.dp)
-                ) {
-                  Icon(
-                    imageVector = if (hasCopiedCommand) Icons.Outlined.Check else Icons.Outlined.ContentCopy,
-                    contentDescription = "Copy command",
-                    tint = if (hasCopiedCommand) EmeraldGreen else InkMuted,
-                    modifier = Modifier.size(16.dp)
-                  )
-                }
-              }
-            }
-          }
+      // Agent Integration & Installation
+      item {
+        val isMcp = skill.name.contains("mcp", ignoreCase = true) ||
+          skill.description.contains("mcp", ignoreCase = true) ||
+          skill.supportedTools.any { it.contains("mcp", ignoreCase = true) } ||
+          skill.category.name.contains("MCP")
+        val repoUrl = if (skill.repoPlatform.name == "GITLAB") {
+          "https://gitlab.com/${skill.repoFullName}"
+        } else {
+          "https://github.com/${skill.repoFullName}"
         }
+        val cleanCmd = skill.installCommand?.ifBlank { null } ?: if (isMcp) {
+          "npx -y @modelcontextprotocol/server-${skill.name.lowercase().replace("[^a-z0-9_-]".toRegex(), "-")}"
+        } else {
+          "git clone $repoUrl"
+        }
+        AgentIntegrationView(
+          title = skill.name,
+          repoFullName = skill.repoFullName,
+          repoUrl = repoUrl,
+          description = skill.description,
+          isMcp = isMcp,
+          installCommand = cleanCmd,
+          promptInstructions = skill.promptInstructions.ifBlank { "You have access to ${skill.name} from ${skill.repoFullName}." },
+          tools = skill.supportedTools
+        )
       }
 
       // Supported Tools

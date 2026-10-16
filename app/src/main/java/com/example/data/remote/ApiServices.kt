@@ -37,7 +37,7 @@ interface GitLabApiService {
   @GET("api/v4/projects")
   suspend fun searchProjects(
     @Query("search") search: String,
-    @Query("order_by") orderBy: String = "stars",
+    @Query("order_by") orderBy: String = "last_activity_at",
     @Query("sort") sort: String = "desc",
     @Query("per_page") perPage: Int = 25
   ): Response<List<GitLabProjectDto>>

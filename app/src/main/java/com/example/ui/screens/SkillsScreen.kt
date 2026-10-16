@@ -28,6 +28,7 @@ fun SkillsScreen(
   modifier: Modifier = Modifier
 ) {
   val skills by viewModel.skills.collectAsState()
+  val isLoading by viewModel.isLoading.collectAsState()
   var selectedCategory by remember { mutableStateOf<ResourceCategory?>(null) }
   var searchQuery by remember { mutableStateOf("") }
 
@@ -63,33 +64,46 @@ fun SkillsScreen(
           horizontalArrangement = Arrangement.SpaceBetween,
           verticalAlignment = Alignment.CenterVertically
         ) {
-          Column {
+          Column(modifier = Modifier.weight(1f)) {
             Text(
               text = "Skill Explorer",
               style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.ExtraBold),
               color = InkBlack
             )
             Text(
-              text = "Direct indexing of SKILL.md specs, MCP tools & prompts.",
+              text = "Real-time indexing of SKILL.md specs, MCP tools & prompts.",
               style = MaterialTheme.typography.bodyMedium,
               color = InkMuted
             )
           }
 
-          Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = CreamSurfaceVariant,
-            border = androidx.compose.foundation.BorderStroke(1.dp, CreamBorder)
-          ) {
-            Text(
-              text = "${skills.size} INDEXED",
-              style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 10.sp
-              ),
-              color = InkBlack,
-              modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-            )
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+              onClick = { viewModel.refreshData() },
+              modifier = Modifier.testTag("btn_refresh_skills")
+            ) {
+              Icon(
+                imageVector = Icons.Outlined.Refresh,
+                contentDescription = "Refresh live skills",
+                tint = InkBlack
+              )
+            }
+
+            Surface(
+              shape = RoundedCornerShape(8.dp),
+              color = CreamSurfaceVariant,
+              border = androidx.compose.foundation.BorderStroke(1.dp, CreamBorder)
+            ) {
+              Text(
+                text = "${skills.size} LIVE",
+                style = MaterialTheme.typography.labelSmall.copy(
+                  fontWeight = FontWeight.Bold,
+                  fontSize = 10.sp
+                ),
+                color = InkBlack,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+              )
+            }
           }
         }
 
@@ -101,7 +115,7 @@ fun SkillsScreen(
           onValueChange = { searchQuery = it },
           modifier = Modifier.fillMaxWidth(),
           placeholder = {
-            Text("Filter by skill name, tool (e.g. playwright, sql)...", fontSize = 13.sp, color = InkSubtle)
+            Text("Filter by skill name, tool (e.g. playwright, mcp)...", fontSize = 13.sp, color = InkSubtle)
           },
           leadingIcon = {
             Icon(Icons.Outlined.Search, contentDescription = null, tint = InkBlack)
@@ -144,8 +158,8 @@ fun SkillsScreen(
           val formats = listOf(
             ResourceCategory.AI_SKILLS,
             ResourceCategory.MCP_SERVERS,
-            ResourceCategory.AUTOMATION,
-            ResourceCategory.WEB_DEV
+            ResourceCategory.AI_AGENTS,
+            ResourceCategory.AUTOMATION
           )
           items(formats) { cat ->
             val isSelected = selectedCategory == cat
@@ -181,22 +195,81 @@ fun SkillsScreen(
         verticalAlignment = Alignment.CenterVertically
       ) {
         Text(
-          text = "Discovered Skills (${filteredSkills.size})",
+          text = if (isLoading) "Fetching real-time skills..." else "Discovered Skills (${filteredSkills.size})",
           style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
           color = InkBlack
         )
       }
     }
 
-    // Skills List
-    items(filteredSkills, key = { it.id }) { skill ->
-      Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {
-        SkillCard(
-          skill = skill,
-          isBookmarked = viewModel.isSkillBookmarked(skill.repoFullName, skill.name),
-          onBookmarkClick = { viewModel.toggleBookmarkSkill(skill) },
-          onInspectSkillClick = { viewModel.openSkillDetails(skill) }
-        )
+    if (isLoading && skills.isEmpty()) {
+      item {
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(48.dp),
+          contentAlignment = Alignment.Center
+        ) {
+          CircularProgressIndicator(color = InkBlack, strokeWidth = 3.dp)
+        }
+      }
+    } else if (filteredSkills.isEmpty()) {
+      item {
+        Card(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp),
+          colors = CardDefaults.cardColors(containerColor = CreamSurface),
+          border = androidx.compose.foundation.BorderStroke(1.dp, CreamBorder),
+          shape = RoundedCornerShape(16.dp)
+        ) {
+          Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            Icon(
+              imageVector = Icons.Outlined.CloudDownload,
+              contentDescription = null,
+              modifier = Modifier.size(40.dp),
+              tint = InkBlack
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+              text = "No skills matched your filter",
+              style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+              color = InkBlack
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+              text = "Fetch live MCP servers, agent tools, and SKILL.md specs from GitHub and GitLab.",
+              style = MaterialTheme.typography.bodySmall,
+              color = InkMuted,
+              textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+              onClick = { viewModel.refreshData() },
+              colors = ButtonDefaults.buttonColors(containerColor = InkBlack, contentColor = CreamBackground),
+              shape = RoundedCornerShape(10.dp)
+            ) {
+              Icon(Icons.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+              Spacer(modifier = Modifier.width(6.dp))
+              Text("Fetch Live Data", fontWeight = FontWeight.Bold)
+            }
+          }
+        }
+      }
+    } else {
+      // Skills List
+      items(filteredSkills, key = { it.id }) { skill ->
+        Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {
+          SkillCard(
+            skill = skill,
+            isBookmarked = viewModel.isSkillBookmarked(skill.repoFullName, skill.name),
+            onBookmarkClick = { viewModel.toggleBookmarkSkill(skill) },
+            onInspectSkillClick = { viewModel.openSkillDetails(skill) }
+          )
+        }
       }
     }
   }
